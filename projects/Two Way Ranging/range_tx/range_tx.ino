@@ -109,13 +109,20 @@ void setup()
 void loop()
 {
   /* Activate reception immediately. */
+  // Immediately enter RX mode from IDLE_PLL
   dwt_rxenable(DWT_START_RX_IMMEDIATE);
 
   /* Poll for reception of a frame or error/timeout. See NOTE 6 below. */
-  while (!((status_reg = dwt_read32bitreg(SYS_STATUS_ID)) & (SYS_STATUS_RXFCG_BIT_MASK | SYS_STATUS_ALL_RX_ERR)))
+  while (true)
   {
+    status_reg = dwt_read32bitreg(SYS_STATUS_ID);
+    uint32_t receive_mask = SYS_STATUS_RXFCG_BIT_MASK | SYS_STATUS_ALL_RX_ERR;
+    uint32_t is_received = status_reg & receive_mask;
+
+    if (is_received) break;
   };
 
+  // successfully received a frame
   if (status_reg & SYS_STATUS_RXFCG_BIT_MASK)
   {
     uint32_t frame_len;
@@ -131,12 +138,13 @@ void loop()
 
       /* Check that the frame is a poll sent by "SS TWR initiator" example.
        * As the sequence number field of the frame is not relevant, it is cleared to simplify the validation of the frame. */
-      rx_buffer[ALL_MSG_SN_IDX] = 0;
+      rx_buffer[ALL_MSG_SN_IDX] = 0; // ignored
+
       if (memcmp(rx_buffer, rx_poll_msg, ALL_MSG_COMMON_LEN) == 0)
       {
         uint32_t resp_tx_time;
         int ret;
-
+        
         /* Retrieve poll reception timestamp. */
         poll_rx_ts = get_rx_timestamp_u64();
 

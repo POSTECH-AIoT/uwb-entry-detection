@@ -44,6 +44,7 @@ extern dwt_txconfig_t txconfig_options;
 void setup()
 {
   UART_init();
+  Serial.begin(9600);
 
   spiBegin(PIN_IRQ, PIN_RST);
   spiSelect(PIN_SS);
@@ -158,6 +159,9 @@ void loop()
         /* Display computed distance on LCD. */
         snprintf(dist_str, sizeof(dist_str), "DIST: %3.2f m", distance);
         test_run_info((unsigned char *)dist_str);
+        Serial.println(dist_str);
+        Serial.printf("DIST: %3.2f m", distance);
+        Serial.println();
       }
     }
   }
